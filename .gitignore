@@ -1,4 +1,4 @@
 node_modules
-dev/bower_components
+bower_components
 .tmp
 build
