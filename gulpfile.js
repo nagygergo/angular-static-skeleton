@@ -13,6 +13,8 @@ var gulp = require('gulp'),
     print = require('gulp-print');
     eslint = require('gulp-eslint');
     args = require('yargs').argv;
+    plumber = require('gulp-plumber');
+    scss = require('gulp-sass');
 
 
 gulp.task('html', function () {
@@ -62,6 +64,15 @@ gulp.task('lint', function () {
     .pipe(eslint.format());
 });
 
+gulp.task('styles', ['clean-styles'], function () {
+  log('Compiling Sass --> CSS');
+
+  return gulp
+    .src(config.sass)
+    .pipe(plumber())
+    .pipe(scss())
+    .pipe(gulp.dest(config.build));
+});
 function log(msg) {
   if (typeof (msg) === 'object') {
     for (var item in msg) {

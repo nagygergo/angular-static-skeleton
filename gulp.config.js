@@ -42,7 +42,7 @@ module.exports = function() {
       '**/*.module.js',
       '**/*.js'
     ],
-    sass: 'styles/styles.sass',
+    sass: ['styles/*.scss'],
     report: report,
     root: root,
 
