@@ -10,7 +10,6 @@ module.exports = function() {
   var bower = {
     json: require('./bower.json'),
     directory: './bower_components',
-    ignorePath: '../..'
   }
 
   var nodeModules = 'node_modules'
@@ -29,8 +28,8 @@ module.exports = function() {
     fonts: bower.directory + 'font-awesome/fonts/**/*.*',
     html: app + '**/*.html',
     htmltemplates: app + '**/*.html',
-    images: app + 'images/**/*.*',
-    index: app + 'index.html',
+    images: 'images/**/*.*',
+    index: 'index.html',
     // app js, with no specs
     js: [
       app + '**/*.module.js',
@@ -94,6 +93,14 @@ module.exports = function() {
       './bower.json'
     ],
   }
+  config.getWiredepDefaultOptions = function() {
+    var options = {
+      bowerJson: config.bower.json,
+      directory: config.bower.directory,
+      ignorePath: config.bower.ignorePath
+    };
+    return options;
+  };
 
   return config;
 }

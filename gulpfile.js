@@ -15,6 +15,10 @@ var gulp = require('gulp'),
     args = require('yargs').argv;
     plumber = require('gulp-plumber');
     scss = require('gulp-sass');
+    imagemin = require('gulp-imagemin');
+    gulporder = require('gulp-order');
+    gulpinject = require('gulp-inject');
+    wiredep = require('gulp-wiredep');
 
 
 gulp.task('html', function () {
@@ -64,15 +68,44 @@ gulp.task('lint', function () {
     .pipe(eslint.format());
 });
 
-gulp.task('styles', ['clean-styles'], function () {
+gulp.task('styles', [], function () {
   log('Compiling Sass --> CSS');
 
   return gulp
     .src(config.sass)
     .pipe(plumber())
     .pipe(scss())
+    .pipe(gulp.dest(config.build + 'styles'));
+});
+
+gulp.task('images', [], function () {
+  log('Compressing and copying images');
+
+  return gulp
+    .src(config.images)
+    .pipe(imagemin({optimizationLevel: 4}))
+    .pipe(gulp.dest(config.build + 'images'));
+
+});
+
+gulp.task('sass-watcher', function() {
+  gulp.watch([config.sass], ['styles']);
+});
+
+gulp.task('wiredep', function() {
+  log('Wiring the bower dependencies into the html');
+
+  var options = config.getWiredepDefaultOptions();
+
+  // Only include stubs if flag is enabled
+  var js = config.js;
+
+  return gulp
+    .src(config.root + config.index)
+    .pipe(wiredep(options))
     .pipe(gulp.dest(config.build));
 });
+
 function log(msg) {
   if (typeof (msg) === 'object') {
     for (var item in msg) {
@@ -83,4 +116,20 @@ function log(msg) {
   } else {
     gutil.log(gutil.colors.blue(msg));
   }
+}
+
+function inject(src, label, order) {
+  var options = {};
+  if (label) {
+    options.name = 'inject:' + label;
+  }
+
+  return gulpinject(orderSrc(src, order), options);
+}
+
+function orderSrc(src, order) {
+  //order = order || ['**/*'];
+  return gulp
+    .src(src)
+    .pipe(gulpif(order, gulporder(order)));
 }
