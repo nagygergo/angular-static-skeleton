@@ -27,7 +27,6 @@ module.exports = function() {
     css: temp + 'styles.css',
     fonts: bower.directory + 'font-awesome/fonts/**/*.*',
     html: app + '**/*.html',
-    htmltemplates: app + '**/*.html',
     images: 'images/**/*.*',
     index: 'index.html',
     // app js, with no specs

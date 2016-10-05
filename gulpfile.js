@@ -8,43 +8,27 @@ var gulp = require('gulp'),
     minifyCss = require('gulp-minify-css'),
     connect = require('gulp-connect'),
     opn = require('opn'),
-    htmlmin = require('gulp-htmlmin');
-    config = require('./gulp.config')();
-    print = require('gulp-print');
-    eslint = require('gulp-eslint');
-    args = require('yargs').argv;
-    plumber = require('gulp-plumber');
-    scss = require('gulp-sass');
-    imagemin = require('gulp-imagemin');
-    gulporder = require('gulp-order');
-    gulpinject = require('gulp-inject');
+    htmlmin = require('gulp-htmlmin'),
+    config = require('./gulp.config')(),
+    print = require('gulp-print'),
+    eslint = require('gulp-eslint'),
+    args = require('yargs').argv,
+    plumber = require('gulp-plumber'),
+    scss = require('gulp-sass'),
+    imagemin = require('gulp-imagemin'),
+    gulporder = require('gulp-order'),
+    gulpinject = require('gulp-inject'),
     wiredep = require('gulp-wiredep');
 
 
-gulp.task('html', function () {
-    var assets = useref.assets();
-
-    return gulp.src('dev/*.html')
-        .pipe(assets)
-        .pipe(gulpif('*.js', uglify()))
-        .pipe(gulpif('*.css', autoprefixer({
-            browsers: ['last 2 versions', 'ie 8', 'ie 9']
-        })))
-        .pipe(gulpif('*.css', minifyCss()))
-        .pipe(assets.restore())
-        .pipe(useref())
-        .pipe(gulpif('*.html', htmlmin({collapseWhitespace: true})))
-        .pipe(gulp.dest('./'));
-});
-
 gulp.task('reload', function () {
-  return gulp.src('dev/**/**.*')
+  return gulp.src('config.build')
     .pipe(connect.reload());
 });
 
 gulp.task('connect', function (done) {
   connect.server({
-    root: 'dev',
+    root: config.build,
     port: 8080,
     livereload: true
   });
@@ -52,11 +36,10 @@ gulp.task('connect', function (done) {
 });
 
 gulp.task('watch', function () {
-  gulp.watch('dev/**/**.*', ['reload']);
+  gulp.watch(config.build, ['reload']);
 });
 
 gulp.task('serve', ['connect', 'watch']);
-gulp.task('default', ['html']);
 
 gulp.task('lint', function () {
   log('Analyzing source with JSHint and JSCS');
@@ -92,6 +75,17 @@ gulp.task('sass-watcher', function() {
   gulp.watch([config.sass], ['styles']);
 });
 
+gulp.task('html', function () {
+    log('Copying html files');
+    return gulp
+        .src([config.html, config.index])
+        .pipe(gulp.dest(config.build));
+});
+
+gulp.task('html-watcher', function () {
+    gulp.watch([config.html], ['html']);
+});
+
 gulp.task('wiredep', function() {
   log('Wiring the bower dependencies into the html');
 
@@ -101,7 +95,7 @@ gulp.task('wiredep', function() {
   var js = config.js;
 
   return gulp
-    .src(config.root + config.index)
+    .src(config.build + config.index)
     .pipe(wiredep(options))
     .pipe(gulp.dest(config.build));
 });
