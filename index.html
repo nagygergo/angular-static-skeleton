@@ -5,11 +5,12 @@
         <title>Hello World</title>
         <meta name="viewport" content="width=device-width">
         <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
-        <!-- build:css styles/styles.css -->
-        <link rel="stylesheet" href="styles/main.css">
-        <!-- endbuild -->
         <!-- bower:css -->
-        <!-- endbower -->
+        <link rel="stylesheet" href="lib/bootstrap.css">
+        <!-- endinject -->
+        <!-- inject:css -->
+        <link rel="stylesheet" href="styles/main.css">
+        <!-- endinject -->
     </head>
     <body ng-app="HelloWorld" ng-controller="HelloWorldCtrl">
 
@@ -29,14 +30,13 @@
                 <a href="https://github.com/cedced19/hello-world">Fork me on Github</a>
             </div>
             <!-- bower:js -->
-            <!-- endbower -->
-            <!-- build:js scripts/scripts.js -->
-
-
-
-
-
-            <script type="text/javascript" src="scripts/app.js"></script>
-            <!-- endbuild -->
+            <script src="lib/angular.js"></script>
+            <script src="lib/bootstrap.js"></script>
+            <script src="lib/jquery.js"></script>
+            <!-- endinject -->
+            <!-- inject:js -->
+            <script src="app/app.js"></script>
+            <script src="app/testmodule/app.js"></script>
+            <!-- endinject -->
     </body>
 </html>
