@@ -2,17 +2,16 @@ module.exports = function() {
   var app = './app/';
   var report = './report/';
   var root = './';
-  var temp = './.tmp';
-  var wiredep = require('wiredep');
-  var bowerFiles = wiredep({
-    devDependencies: true
-  })['js'];
   var bower = {
     json: require('./bower.json'),
     directory: './bower_components',
   }
-
-  var nodeModules = 'node_modules'
+  var wiredep = require('wiredep', {
+    bowerJson: bower.json,
+    directory: bower.directory,
+    ignorePath: bower.ignorePath
+  });
+  var libFiles = wiredep();
 
   var config = {
     /**
@@ -24,33 +23,28 @@ module.exports = function() {
       './*.js'
     ],
     build: './build/',
-    css: temp + 'styles.css',
-    fonts: bower.directory + 'font-awesome/fonts/**/*.*',
+    css: 'styles/**/*.css',
     html: app + '**/*.html',
-    htmltemplates: app + '**/*.html',
     images: 'images/**/*.*',
     index: 'index.html',
+    appdir : 'app/',
+    dist : 'dist',
     // app js, with no specs
     js: [
       app + '**/*.module.js',
       app + '**/*.js',
       '!' + app + '**/*.spec.js'
     ],
-    jsOrder: [
-      '**/app.module.js',
-      '**/*.module.js',
-      '**/*.js'
+    buildjsOrder: [
+      './build/app/**/app.module.js',
+      './build/app/**/*.module.js',
+      './build/app/**/*.js'
     ],
-    sass: ['styles/*.scss'],
+    sass: 'styles/**/*.scss',
     report: report,
     root: root,
-
-    source: 'src/',
-    stubsjs: [
-      bower.directory + 'angular-mocks/angular-mocks.js',
-       'stubs/**/*.js'
-    ],
-    temp: temp,
+    libFiles : libFiles,
+    lib : '/lib',
 
     /**
      * optimized files
@@ -60,38 +54,7 @@ module.exports = function() {
       lib: 'lib.js'
     },
 
-    /**
-     * plato
-     */
-    plato: {
-      js: app + '**/*.js'
-    },
-
-    /**
-     * browser sync
-     */
-    browserReloadDelay: 1000,
-
-    /**
-     * template cache
-     */
-    templateCache: {
-      file: 'templates.js',
-      options: {
-        module: 'app.core',
-        root: 'app/',
-        standalone: false
-      }
-    },
-
-    /**
-     * Bower and NPM files
-     */
-    bower: bower,
-    packages: [
-      './package.json',
-      './bower.json'
-    ],
+    bower: bower
   }
   config.getWiredepDefaultOptions = function() {
     var options = {

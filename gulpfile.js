@@ -1,13 +1,12 @@
-// Generated on 2016-10-04 using generator-static-angular v0.0.6
 var gulp = require('gulp'),
     gutil = require('gulp-util'),
     useref = require('gulp-useref'),
     gulpif = require('gulp-if'),
     autoprefixer = require('gulp-autoprefixer'),
     uglify = require('gulp-uglify'),
-    minifyCss = require('gulp-minify-css'),
-    connect = require('gulp-connect'),
-    opn = require('opn'),
+    minifyCss = require('gulp-minify-css');
+    connect = require('gulp-connect');
+    opn = require('opn');
     htmlmin = require('gulp-htmlmin');
     config = require('./gulp.config')();
     print = require('gulp-print');
@@ -17,34 +16,54 @@ var gulp = require('gulp'),
     scss = require('gulp-sass');
     imagemin = require('gulp-imagemin');
     gulporder = require('gulp-order');
-    gulpinject = require('gulp-inject');
+    inject = require('gulp-inject');
     wiredep = require('gulp-wiredep');
+    htmlmin = require('gulp-htmlmin');
+    clean = require('gulp-clean');
+    rimraf = require('gulp-rimraf');
+    gulpSequence = require('gulp-sequence');
+    ghPages = require('gulp-gh-pages');
+    concatCss = require('gulp-concat-css');
+    cleanCss = require('gulp-clean-css');
 
 
-gulp.task('html', function () {
-    var assets = useref.assets();
 
-    return gulp.src('dev/*.html')
-        .pipe(assets)
-        .pipe(gulpif('*.js', uglify()))
-        .pipe(gulpif('*.css', autoprefixer({
-            browsers: ['last 2 versions', 'ie 8', 'ie 9']
-        })))
-        .pipe(gulpif('*.css', minifyCss()))
-        .pipe(assets.restore())
-        .pipe(useref())
-        .pipe(gulpif('*.html', htmlmin({collapseWhitespace: true})))
-        .pipe(gulp.dest('./'));
+gulp.task('build', function (callback) {
+  gulpSequence('lint', 'clean', 'images', 'html', 'styles', 'styles-inject', 'wiredep', 'js', 'js-inject')(callback);
 });
 
-gulp.task('reload', function () {
-  return gulp.src('dev/**/**.*')
+gulp.task('deploy', ['build'], function () {
+  return gulp
+    .src(config.build + '**/*')
+    .pipe(ghPages({cacheDir : config.dist}));
+})
+
+gulp.task('html', function () {
+    var production  = args.mode === 'production' ? true : false;
+    gulp
+    .src(config.root + config.index)
+    .pipe(gulp.dest(config.build));
+
+    return gulp
+    .src(config.html)
+    .pipe(gulpif(production, htmlmin()))
+    .pipe(gulp.dest(config.build + config.appdir));
+});
+
+gulp.task('clean', function () {
+    return gulp
+      .src(config.build, {read: false})
+      .pipe(rimraf({force : true}));
+})
+
+gulp.task('reload', ['build'], function () {
+  return gulp.src('build/**/**.*')
     .pipe(connect.reload());
 });
 
-gulp.task('connect', function (done) {
+gulp.task('connect', ['build'], function (done) {
   connect.server({
-    root: 'dev',
+    root: 'build',
     port: 8080,
     livereload: true
   });
@@ -52,7 +71,7 @@ gulp.task('connect', function (done) {
 });
 
 gulp.task('watch', function () {
-  gulp.watch('dev/**/**.*', ['reload']);
+  gulp.watch([config.images, config.js, config.html, config.sass], ['reload']);
 });
 
 gulp.task('serve', ['connect', 'watch']);
@@ -68,15 +87,25 @@ gulp.task('lint', function () {
     .pipe(eslint.format());
 });
 
-gulp.task('styles', [], function () {
-  log('Compiling Sass --> CSS');
+gulp.task('styles', function () {
+  var production  = args.mode === 'production' ? true : false;
 
-  return gulp
+  log('Compiling Sass --> CSS');
+    return gulp
     .src(config.sass)
     .pipe(plumber())
     .pipe(scss())
+    .pipe(gulpif(production, concatCss('/bundle.css')))
+    .pipe(gulpif(production, cleanCss()))
     .pipe(gulp.dest(config.build + 'styles'));
 });
+
+gulp.task('styles-inject', function () {
+  return gulp
+  .src(config.build + config.index)
+  .pipe(inject(gulp.src(config.build + config.css, {read : false}), {relative : true}))
+  .pipe(gulp.dest(config.build));
+})
 
 gulp.task('images', [], function () {
   log('Compressing and copying images');
@@ -84,7 +113,7 @@ gulp.task('images', [], function () {
   return gulp
     .src(config.images)
     .pipe(imagemin({optimizationLevel: 4}))
-    .pipe(gulp.dest(config.build + 'images'));
+    .pipe(gulp.dest(config.build + 'images/'));
 
 });
 
@@ -92,19 +121,38 @@ gulp.task('sass-watcher', function() {
   gulp.watch([config.sass], ['styles']);
 });
 
-gulp.task('wiredep', function() {
+gulp.task('copybower', function () {
+  var sources = config.libFiles['js'].concat(config.libFiles['css']);
+  return gulp
+  .src(sources)
+  .pipe(gulp.dest(config.build + config.lib));
+})
+
+gulp.task('wiredep', ['copybower'], function() {
   log('Wiring the bower dependencies into the html');
 
-  var options = config.getWiredepDefaultOptions();
-
   // Only include stubs if flag is enabled
-  var js = config.js;
 
   return gulp
-    .src(config.root + config.index)
-    .pipe(wiredep(options))
-    .pipe(gulp.dest(config.build));
+  .src(config.build + config.index)
+  .pipe(inject(gulp.src(config.build + config.lib + '/*.*'), {name : 'bower', relative : true}))
+  .pipe(gulp.dest(config.build));
 });
+
+gulp.task('js', function () {
+  log('Copying files to build dir')
+  return gulp
+    .src(config.js)
+    .pipe(gulp.dest(config.build + config.appdir));
+})
+
+gulp.task('js-inject', function () {
+  return gulp
+  .src(config.build + config.index)
+  .pipe(inject(gulp.src(config.buildjsOrder), {relative : true}))
+  .pipe(gulp.dest(config.build));
+})
+
 
 function log(msg) {
   if (typeof (msg) === 'object') {
@@ -116,20 +164,4 @@ function log(msg) {
   } else {
     gutil.log(gutil.colors.blue(msg));
   }
-}
-
-function inject(src, label, order) {
-  var options = {};
-  if (label) {
-    options.name = 'inject:' + label;
-  }
-
-  return gulpinject(orderSrc(src, order), options);
-}
-
-function orderSrc(src, order) {
-  //order = order || ['**/*'];
-  return gulp
-    .src(src)
-    .pipe(gulpif(order, gulporder(order)));
 }
