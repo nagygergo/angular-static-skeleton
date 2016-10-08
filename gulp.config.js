@@ -12,16 +12,18 @@ module.exports = function() {
     ignorePath: bower.ignorePath
   });
   var libFiles = wiredep();
+  var angularMocks = bower.directory + '/angular-mocks/angular-mocks.js';
+  var alljs = [
+    app + '**/*.module.js',
+    app + '**/*.js'
+  ];
 
   var config = {
     /**
      * File paths
      */
     // all javascript that we want to vet
-    alljs: [
-      './src/**/*.js',
-      './*.js'
-    ],
+    alljs: alljs,
     build: './build/',
     css: 'styles/**/*.css',
     html: app + '**/*.html',
@@ -35,6 +37,7 @@ module.exports = function() {
       app + '**/*.js',
       '!' + app + '**/*.spec.js'
     ],
+
     buildjsOrder: [
       './build/app/**/app.module.js',
       './build/app/**/*.module.js',
@@ -55,7 +58,28 @@ module.exports = function() {
     },
 
     bower: bower
-  }
+  };
+
+  config.getKarmaConfig =  function (singleRun) {
+    var karmaFiles = libFiles['js'];
+    karmaFiles.push(angularMocks);
+    karmaFiles = karmaFiles.concat(alljs);
+    var options = {
+    basePath : '',
+    files : karmaFiles,
+    browsers : ['Chrome', 'PhantomJs', 'Firefox'],
+    plugins: [
+            'karma-spec-reporter',
+            'karma-jasmine',
+            'karma-chrome-launcher',
+            'karma-jshint-preprocessor',
+            'karma-coverage'
+        ],
+    autoWatch: true,
+    singleRun : singleRun 
+  };
+  return options;
+  };
   config.getWiredepDefaultOptions = function() {
     var options = {
       bowerJson: config.bower.json,

@@ -25,6 +25,8 @@ var gulp = require('gulp'),
     ghPages = require('gulp-gh-pages');
     concatCss = require('gulp-concat-css');
     cleanCss = require('gulp-clean-css');
+    concat = require('gulp-concat');
+    Server = require('karma').Server;
 
 
 
@@ -36,6 +38,18 @@ gulp.task('deploy', ['build'], function () {
   return gulp
     .src(config.build + '**/*')
     .pipe(ghPages({cacheDir : config.dist}));
+})
+
+gulp.task('test', function (done) {
+  new Server(
+    config.getKarmaConfig(true),
+  done).start();
+});
+
+gulp.task('tdd', function (done) {
+  new Server({
+    config : config.getKarmaConfig(),
+  }, done).start();
 })
 
 gulp.task('html', function () {
@@ -117,14 +131,25 @@ gulp.task('images', [], function () {
 
 });
 
-gulp.task('sass-watcher', function() {
-  gulp.watch([config.sass], ['styles']);
-});
+gulp.task('copybower',['copybower-js', 'copybower-styles']);
 
-gulp.task('copybower', function () {
-  var sources = config.libFiles['js'].concat(config.libFiles['css']);
+gulp.task('copybower-js', function () {
+  var sources = config.libFiles['js'];
+  var production  = args.mode === 'production' ? true : false;
   return gulp
   .src(sources)
+  .pipe(gulpif(production, uglify()))
+  .pipe(gulpif(production, concat('bundle.js')))
+  .pipe(gulp.dest(config.build + config.lib));
+})
+
+gulp.task('copybower-styles', function () {
+  var sources = config.libFiles['css'];
+  var production  = args.mode === 'production' ? true : false;
+  return gulp
+  .src(sources)
+  .pipe(gulpif(production, uglify()))
+  .pipe(gulpif(production, concat('bundle.css')))
   .pipe(gulp.dest(config.build + config.lib));
 })
 

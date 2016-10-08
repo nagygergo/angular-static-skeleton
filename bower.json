@@ -7,12 +7,15 @@
     "bootstrap": "^3.3.7"
   },
   "overrides": {
-  "bootstrap": {
-    "main": [
-      "dist/js/bootstrap.js",
-      "dist/css/bootstrap.css",
-      "less/bootstrap.less"
-        ]
+    "bootstrap": {
+      "main": [
+        "dist/js/bootstrap.js",
+        "dist/css/bootstrap.css",
+        "less/bootstrap.less"
+      ]
     }
-}
+  },
+  "devDependencies": {
+    "angular-mocks": "^1.5.8"
+  }
 }
