@@ -89,7 +89,6 @@ gulp.task('watch', function () {
 });
 
 gulp.task('serve', ['connect', 'watch']);
-gulp.task('default', ['html']);
 
 gulp.task('lint', function () {
   log('Analyzing source with JSHint and JSCS');
